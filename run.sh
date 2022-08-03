@@ -22,9 +22,13 @@ git clone https://github.com/bf2fc6cc711aee1a0c2a/srs-fleet-manager.git --depth 
   mvn clean install -DskipTests
 )
 
+yarn --cwd apicurio-registry/ui install
+
 # Run the 3 services
 mvn compile exec:java -Dexec.mainClass="io.apicurio.registry.RegistryQuarkusMain" -f apicurio-registry/app/pom.xml &
 
 mvn compile exec:java -Dexec.mainClass="io.apicurio.multitenant.api.TenantManagerQuarkusMain" -f apicurio-registry/multitenancy/tenant-manager-api/pom.xml &
 
 mvn compile exec:java -Dexec.mainClass="org.bf2.srs.fleetmanager.FleetManagerQuarkusMain" -f srs-fleet-manager/core/pom.xml &
+
+yarn --cwd apicurio-registry/ui start &
