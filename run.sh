@@ -21,6 +21,11 @@ git clone https://github.com/bf2fc6cc711aee1a0c2a/srs-fleet-manager.git --depth 
   cd srs-fleet-manager && \
   mvn clean install -DskipTests
 )
+(
+  cd apicurio-registry/ui && \
+  ./init-dev.sh && \
+  yarn install
+)
 
 yarn --cwd apicurio-registry/ui install
 
