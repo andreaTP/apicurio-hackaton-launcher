@@ -66,8 +66,9 @@ spec:
             value: 'postgres'
           - name: DATASOURCE_PASSWORD
             value: 'postgres'
+          # TODO: fix me
           - name: REGISTRY_ROUTE_URL
-            value: 'http://registry-app:8080'
+            value: 'http://localhost:9090'
           - name: AUTH_ENABLED
             value: 'true'
           # TODO: use a self contained Keycloak
@@ -126,14 +127,17 @@ spec:
             value: 'postgres'
           - name: SERVICE_API_DATASOURCE_PASSWORD
             value: 'postgres'
-          - name: QUARKUS_FLYWAY_MIGRATE_AT_START
-            value: 'true'
+          # - name: QUARKUS_FLYWAY_MIGRATE_AT_START
+          #   value: 'true'
           - name: REGISTRY_QUOTA_PLANS_CONFIG_FILE
             value: '/mnt/config/quota-plans.yaml'
           - name: REGISTRY_DEPLOYMENTS_CONFIG_FILE
             value: '/mnt/config/registry-deployments.yaml'
           - name: AUTH_ENABLED
             value: 'true'
+          # TODO configure this properly
+          - name: REGISTRY_BROWSER_URL
+            value: http://localhost:8081
           # TODO: use a self contained Keycloak
           - name: KEYCLOAK_URL
             value: 'https://auth.apicur.io/auth'
@@ -171,7 +175,7 @@ metadata:
   name: fleet-manager-config
 data:
   quota-plans.yaml: cmVjb25jaWxlOiBmYWxzZSAjIEVuYWJsZSB0aGlzIGlmIHlvdSBtYWtlIGNoYW5nZXMgdG8gdGhlIHBsYW5zIGNvbmZpZ3VyYXRpb24KcGxhbnM6CiAgLSBuYW1lOiBkZWZhdWx0CiAgICByZXNvdXJjZXM6CiAgICAgIC0gdHlwZTogTUFYX1RPVEFMX1NDSEVNQVNfQ09VTlQKICAgICAgICBsaW1pdDogMTAwMDAKICAgICAgLSB0eXBlOiBNQVhfU0NIRU1BX1NJWkVfQllURVMKICAgICAgICBsaW1pdDogNjU1MzYgIyA2NCBLaUIKICAgICAgLSB0eXBlOiBNQVhfQVJUSUZBQ1RTX0NPVU5UCiAgICAgICAgbGltaXQ6IC0xCiAgICAgIC0gdHlwZTogTUFYX1ZFUlNJT05TX1BFUl9BUlRJRkFDVF9DT1VOVAogICAgICAgIGxpbWl0OiAtMQogICAgICAtIHR5cGU6IE1BWF9BUlRJRkFDVF9QUk9QRVJUSUVTX0NPVU5UCiAgICAgICAgbGltaXQ6IDUwCiAgICAgIC0gdHlwZTogTUFYX1BST1BFUlRZX0tFWV9TSVpFX0JZVEVTCiAgICAgICAgbGltaXQ6IDI1NgogICAgICAtIHR5cGU6IE1BWF9QUk9QRVJUWV9WQUxVRV9TSVpFX0JZVEVTCiAgICAgICAgbGltaXQ6IDEwMjQKICAgICAgLSB0eXBlOiBNQVhfQVJUSUZBQ1RfTEFCRUxTX0NPVU5UCiAgICAgICAgbGltaXQ6IDUwCiAgICAgIC0gdHlwZTogTUFYX0xBQkVMX1NJWkVfQllURVMKICAgICAgICBsaW1pdDogMjU2CiAgICAgIC0gdHlwZTogTUFYX0FSVElGQUNUX05BTUVfTEVOR1RIX0NIQVJTCiAgICAgICAgbGltaXQ6IC0xCiAgICAgIC0gdHlwZTogTUFYX0FSVElGQUNUX0RFU0NSSVBUSU9OX0xFTkdUSF9DSEFSUwogICAgICAgIGxpbWl0OiAtMQogICAgICAtIHR5cGU6IE1BWF9SRVFVRVNUU19QRVJfU0VDT05EX0NPVU5UCiAgICAgICAgbGltaXQ6IDEwCiAgLSBuYW1lOiBhbHBoYQogICAgcmVzb3VyY2VzOgogICAgICAtIHR5cGU6IE1BWF9UT1RBTF9TQ0hFTUFTX0NPVU5UCiAgICAgICAgbGltaXQ6IDEwMDAwMAogICAgICAtIHR5cGU6IE1BWF9TQ0hFTUFfU0laRV9CWVRFUwogICAgICAgIGxpbWl0OiA1MjQyODggIyA1MTIgS2lCCiAgICAgIC0gdHlwZTogTUFYX0FSVElGQUNUU19DT1VOVAogICAgICAgIGxpbWl0OiAtMQogICAgICAtIHR5cGU6IE1BWF9WRVJTSU9OU19QRVJfQVJUSUZBQ1RfQ09VTlQKICAgICAgICBsaW1pdDogLTEKICAgICAgLSB0eXBlOiBNQVhfQVJUSUZBQ1RfUFJPUEVSVElFU19DT1VOVAogICAgICAgIGxpbWl0OiA1MAogICAgICAtIHR5cGU6IE1BWF9QUk9QRVJUWV9LRVlfU0laRV9CWVRFUwogICAgICAgIGxpbWl0OiAyNTYKICAgICAgLSB0eXBlOiBNQVhfUFJPUEVSVFlfVkFMVUVfU0laRV9CWVRFUwogICAgICAgIGxpbWl0OiAxMDI0CiAgICAgIC0gdHlwZTogTUFYX0FSVElGQUNUX0xBQkVMU19DT1VOVAogICAgICAgIGxpbWl0OiA1MAogICAgICAtIHR5cGU6IE1BWF9MQUJFTF9TSVpFX0JZVEVTCiAgICAgICAgbGltaXQ6IDI1NgogICAgICAtIHR5cGU6IE1BWF9BUlRJRkFDVF9OQU1FX0xFTkdUSF9DSEFSUwogICAgICAgIGxpbWl0OiAtMQogICAgICAtIHR5cGU6IE1BWF9BUlRJRkFDVF9ERVNDUklQVElPTl9MRU5HVEhfQ0hBUlMKICAgICAgICBsaW1pdDogLTEKICAgICAgLSB0eXBlOiBNQVhfUkVRVUVTVFNfUEVSX1NFQ09ORF9DT1VOVAogICAgICAgIGxpbWl0OiAxMDA=
-  registry-deployments.yaml: ZGVwbG95bWVudHM6CiAgLSBuYW1lOiBkZXBsb3ltZW50LTEKICAgIHJlZ2lzdHJ5RGVwbG95bWVudFVybDogaHR0cDovL2ZsZWV0LW1hbmFnZXI6ODA4MAogICAgdGVuYW50TWFuYWdlclVybDogaHR0cDovL3RlbmFudC1tYW5hZ2VyOjg1ODU=
+  registry-deployments.yaml: ZGVwbG95bWVudHM6CiAgLSBuYW1lOiBkZXBsb3ltZW50LTEKICAgIHJlZ2lzdHJ5RGVwbG95bWVudFVybDogaHR0cDovL2xvY2FsaG9zdDo4MDgxCiAgICB0ZW5hbnRNYW5hZ2VyVXJsOiBodHRwOi8vdGVuYW50LW1hbmFnZXI6ODU4NQo=
 ---
 apiVersion: v1
 kind: Service
@@ -182,8 +186,8 @@ spec:
     app: fleet-manager
   type: LoadBalancer
   ports:
-  - port: 8080
-    targetPort: 8081
+  - port: 8081
+    targetPort: 8080
 ---
 # Registry
 apiVersion: apps/v1
@@ -225,6 +229,8 @@ spec:
             value: 'operate-first-apicurio'
           - name: KEYCLOAK_API_CLIENT_ID
             value: 'sr-api'
+          - name: TENANT_MANAGER_AUTH_ENABLED
+            value: 'true'
           - name: TENANT_MANAGER_AUTH_URL
             value: 'https://auth.apicur.io/auth'
           - name: TENANT_MANAGER_REALM
@@ -255,28 +261,6 @@ spec:
   - port: 8080
     targetPort: 8080
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: registry-app
-  annotations: 
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
-spec:
-  rules:
-  # TODO: test and fix this properly
-  # POSSIBLY: localhost on Mac $(minikube ip) on Linux
-  # TODO a script to configure everything
-  - host: registry-app.192.168.49.2.nip.io
-    http:
-      paths:
-      - path: /app
-        pathType: Prefix
-        backend:
-          service:
-            name: registry-app
-            port:
-              number: 8080
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -298,10 +282,10 @@ spec:
           image: quay.io/apicurio/apicurio-registry-mt-ui:hackathon
           env:
             - name: REGISTRY_UI_URL
-              # TODO: configure
-              value: http://localhost/app/modules/registry/apicurio_registry.js
+              # TODO: configure self
+              value: ./modules/registry/apicurio_registry.js
             - name: SRS_API_URL
-              value: https://fleet-manager:8081
+              value: http://localhost:8081
             - name: AUTH_ENABLED
               value: 'true'
             # TODO: use a self contained Keycloak
@@ -326,28 +310,39 @@ spec:
     app: apicurio-registry-mt-ui
   type: LoadBalancer
   ports:
-  - port: 80
+  - port: 8080
     targetPort: 8080
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: apicurio-registry-mt-ui
-  # TODO: check if needed
-  annotations: 
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
-spec:
-  rules:
-  # TODO: test and fix this properly
-  # POSSIBLY: localhost on Mac $(minikube ip) on Linux
-  # TODO a script to configure everything
-  - host: registry.192.168.49.2.nip.io
-    http:
-      paths:
-      - path: /ui
-        pathType: Prefix
-        backend:
-          service:
-            name: apicurio-registry-mt-ui
-            port:
-              number: 80
+# FIX Ingresses
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: apicurio-registry-ingress
+#   # TODO: check if needed
+#   annotations: 
+#     nginx.ingress.kubernetes.io/rewrite-target: /$1
+# spec:
+#   rules:
+#   # TODO: test and fix this properly
+#   # POSSIBLY: localhost on Mac $(minikube ip) on Linux
+#   # TODO a script to configure everything
+#   - host: registry.localhost.nip.io
+#     http:
+#       paths:
+#       - path: /ui
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: apicurio-registry-mt-ui
+#             port:
+#               number: 80
+#   - host: registry-app.localhost.nip.io
+#     http:
+#       paths:
+#       - path: /app
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: registry-app
+#             port:
+#               number: 8080
