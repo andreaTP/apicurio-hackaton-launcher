@@ -1,0 +1,353 @@
+# Postgres
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: multitenant-sr-db
+spec:
+  serviceName: multitenant-sr-db-service
+  selector:
+    matchLabels:
+      app: multitenant-sr-db
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: multitenant-sr-db
+    spec:
+      containers:
+        - name: postgresql-db
+          image: postgres:latest
+          env:
+            - name: POSTGRES_DB
+              value: multitenantsrdb
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+            - name: PGDATA
+              value: /data/pgdata
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: multitenant-sr-db
+spec:
+  selector:
+    app: multitenant-sr-db
+  type: LoadBalancer
+  ports:
+  - port: 5432
+    targetPort: 5432
+---
+# Tenant manager
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenant-manager
+  labels:
+    app: tenant-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tenant-manager
+  template:
+    metadata:
+      labels:
+        app: tenant-manager
+    spec:
+      containers:
+      - name: tenant-manager
+        image: quay.io/apicurio/apicurio-registry-tenant-manager-api:latest-snapshot
+        env:
+          - name: DATASOURCE_URL
+            value: 'jdbc:postgresql://multitenant-sr-db:5432/multitenantsrdb'
+          - name: DATASOURCE_USERNAME
+            value: 'postgres'
+          - name: DATASOURCE_PASSWORD
+            value: 'postgres'
+          - name: REGISTRY_ROUTE_URL
+            value: 'http://registry-app:8080'
+          - name: AUTH_ENABLED
+            value: 'true'
+          # TODO: use a self contained Keycloak
+          - name: KEYCLOAK_URL
+            value: 'https://auth.apicur.io/auth'
+          - name: KEYCLOAK_REALM
+            value: 'operate-first-apicurio'
+          - name: KEYCLOAK_API_CLIENT_ID
+            value: 'sr-tenant-manager'
+        ports:
+        - name: http
+          containerPort: 8585
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tenant-manager
+spec:
+  selector:
+    app: tenant-manager
+  type: LoadBalancer
+  ports:
+  - port: 8585
+    targetPort: 8585
+---
+# Fleet manager
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fleet-manager
+  labels:
+    app: fleet-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fleet-manager
+  template:
+    metadata:
+      labels:
+        app: fleet-manager
+    spec:
+      volumes:
+      - name: fleet-manager-config
+        secret:
+          secretName: fleet-manager-config
+      containers:
+      - name: fleet-manager
+        image: 'quay.io/apicurio/apicurio-registry-fleet-manager:latest-snapshot'
+        env:
+          - name: USE_LOCAL_AMS
+            value: 'true'
+          - name: SERVICE_API_DATASOURCE_URL
+            value: 'jdbc:postgresql://multitenant-sr-db:5432/multitenantsrdb'
+          - name: SERVICE_API_DATASOURCE_USERNAME
+            value: 'postgres'
+          - name: SERVICE_API_DATASOURCE_PASSWORD
+            value: 'postgres'
+          - name: QUARKUS_FLYWAY_MIGRATE_AT_START
+            value: 'true'
+          - name: REGISTRY_QUOTA_PLANS_CONFIG_FILE
+            value: '/mnt/config/quota-plans.yaml'
+          - name: REGISTRY_DEPLOYMENTS_CONFIG_FILE
+            value: '/mnt/config/registry-deployments.yaml'
+          - name: AUTH_ENABLED
+            value: 'true'
+          # TODO: use a self contained Keycloak
+          - name: KEYCLOAK_URL
+            value: 'https://auth.apicur.io/auth'
+          - name: KEYCLOAK_REALM
+            value: 'operate-first-apicurio'
+          - name: KEYCLOAK_API_CLIENT_ID
+            value: 'sr-fleet-manager'
+          - name: TENANT_MANAGER_AUTH_ENABLED
+            value: 'true'
+          - name: TENANT_MANAGER_AUTH_SERVER_URL
+            value: 'https://auth.apicur.io/auth'
+          - name: TENANT_MANAGER_AUTH_SERVER_REALM
+            value: 'operate-first-apicurio'
+          - name: TENANT_MANAGER_AUTH_CLIENT_ID
+            value: 'sr-tenant-manager'
+          - name: ORGANIZATION_ID_CLAIM
+            value: 'organization_id'
+          - name: TENANT_MANAGER_AUTH_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: tenant-manager-client-secret
+                key: secret
+                optional: false
+        ports:
+        - name: http
+          containerPort: 8080
+        volumeMounts:
+        - name: fleet-manager-config
+          readOnly: true
+          mountPath: "/mnt/config"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: fleet-manager-config
+data:
+  quota-plans.yaml: cmVjb25jaWxlOiBmYWxzZSAjIEVuYWJsZSB0aGlzIGlmIHlvdSBtYWtlIGNoYW5nZXMgdG8gdGhlIHBsYW5zIGNvbmZpZ3VyYXRpb24KcGxhbnM6CiAgLSBuYW1lOiBkZWZhdWx0CiAgICByZXNvdXJjZXM6CiAgICAgIC0gdHlwZTogTUFYX1RPVEFMX1NDSEVNQVNfQ09VTlQKICAgICAgICBsaW1pdDogMTAwMDAKICAgICAgLSB0eXBlOiBNQVhfU0NIRU1BX1NJWkVfQllURVMKICAgICAgICBsaW1pdDogNjU1MzYgIyA2NCBLaUIKICAgICAgLSB0eXBlOiBNQVhfQVJUSUZBQ1RTX0NPVU5UCiAgICAgICAgbGltaXQ6IC0xCiAgICAgIC0gdHlwZTogTUFYX1ZFUlNJT05TX1BFUl9BUlRJRkFDVF9DT1VOVAogICAgICAgIGxpbWl0OiAtMQogICAgICAtIHR5cGU6IE1BWF9BUlRJRkFDVF9QUk9QRVJUSUVTX0NPVU5UCiAgICAgICAgbGltaXQ6IDUwCiAgICAgIC0gdHlwZTogTUFYX1BST1BFUlRZX0tFWV9TSVpFX0JZVEVTCiAgICAgICAgbGltaXQ6IDI1NgogICAgICAtIHR5cGU6IE1BWF9QUk9QRVJUWV9WQUxVRV9TSVpFX0JZVEVTCiAgICAgICAgbGltaXQ6IDEwMjQKICAgICAgLSB0eXBlOiBNQVhfQVJUSUZBQ1RfTEFCRUxTX0NPVU5UCiAgICAgICAgbGltaXQ6IDUwCiAgICAgIC0gdHlwZTogTUFYX0xBQkVMX1NJWkVfQllURVMKICAgICAgICBsaW1pdDogMjU2CiAgICAgIC0gdHlwZTogTUFYX0FSVElGQUNUX05BTUVfTEVOR1RIX0NIQVJTCiAgICAgICAgbGltaXQ6IC0xCiAgICAgIC0gdHlwZTogTUFYX0FSVElGQUNUX0RFU0NSSVBUSU9OX0xFTkdUSF9DSEFSUwogICAgICAgIGxpbWl0OiAtMQogICAgICAtIHR5cGU6IE1BWF9SRVFVRVNUU19QRVJfU0VDT05EX0NPVU5UCiAgICAgICAgbGltaXQ6IDEwCiAgLSBuYW1lOiBhbHBoYQogICAgcmVzb3VyY2VzOgogICAgICAtIHR5cGU6IE1BWF9UT1RBTF9TQ0hFTUFTX0NPVU5UCiAgICAgICAgbGltaXQ6IDEwMDAwMAogICAgICAtIHR5cGU6IE1BWF9TQ0hFTUFfU0laRV9CWVRFUwogICAgICAgIGxpbWl0OiA1MjQyODggIyA1MTIgS2lCCiAgICAgIC0gdHlwZTogTUFYX0FSVElGQUNUU19DT1VOVAogICAgICAgIGxpbWl0OiAtMQogICAgICAtIHR5cGU6IE1BWF9WRVJTSU9OU19QRVJfQVJUSUZBQ1RfQ09VTlQKICAgICAgICBsaW1pdDogLTEKICAgICAgLSB0eXBlOiBNQVhfQVJUSUZBQ1RfUFJPUEVSVElFU19DT1VOVAogICAgICAgIGxpbWl0OiA1MAogICAgICAtIHR5cGU6IE1BWF9QUk9QRVJUWV9LRVlfU0laRV9CWVRFUwogICAgICAgIGxpbWl0OiAyNTYKICAgICAgLSB0eXBlOiBNQVhfUFJPUEVSVFlfVkFMVUVfU0laRV9CWVRFUwogICAgICAgIGxpbWl0OiAxMDI0CiAgICAgIC0gdHlwZTogTUFYX0FSVElGQUNUX0xBQkVMU19DT1VOVAogICAgICAgIGxpbWl0OiA1MAogICAgICAtIHR5cGU6IE1BWF9MQUJFTF9TSVpFX0JZVEVTCiAgICAgICAgbGltaXQ6IDI1NgogICAgICAtIHR5cGU6IE1BWF9BUlRJRkFDVF9OQU1FX0xFTkdUSF9DSEFSUwogICAgICAgIGxpbWl0OiAtMQogICAgICAtIHR5cGU6IE1BWF9BUlRJRkFDVF9ERVNDUklQVElPTl9MRU5HVEhfQ0hBUlMKICAgICAgICBsaW1pdDogLTEKICAgICAgLSB0eXBlOiBNQVhfUkVRVUVTVFNfUEVSX1NFQ09ORF9DT1VOVAogICAgICAgIGxpbWl0OiAxMDA=
+  registry-deployments.yaml: ZGVwbG95bWVudHM6CiAgLSBuYW1lOiBkZXBsb3ltZW50LTEKICAgIHJlZ2lzdHJ5RGVwbG95bWVudFVybDogaHR0cDovL2ZsZWV0LW1hbmFnZXI6ODA4MAogICAgdGVuYW50TWFuYWdlclVybDogaHR0cDovL3RlbmFudC1tYW5hZ2VyOjg1ODU=
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleet-manager
+spec:
+  selector:
+    app: fleet-manager
+  type: LoadBalancer
+  ports:
+  - port: 8080
+    targetPort: 8081
+---
+# Registry
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry-app
+  labels:
+    app: registry-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: registry-app
+  template:
+    metadata:
+      labels:
+        app: registry-app
+    spec:
+      containers:
+      - name: registry-app
+        image: 'quay.io/apicurio/apicurio-registry-sql:latest-snapshot'
+        env:
+          - name: REGISTRY_ENABLE_MULTITENANCY
+            value: 'true'
+          - name: REGISTRY_DATASOURCE_URL
+            value: 'jdbc:postgresql://multitenant-sr-db:5432/multitenantsrdb'
+          - name: REGISTRY_DATASOURCE_USERNAME
+            value: 'postgres'
+          - name: REGISTRY_DATASOURCE_PASSWORD
+            value: 'postgres'
+          - name: TENANT_MANAGER_URL
+            value: 'http://tenant-manager:8585'
+          - name: AUTH_ENABLED
+            value: 'true'
+          # TODO: use a self contained Keycloak
+          - name: KEYCLOAK_URL
+            value: 'https://auth.apicur.io/auth'
+          - name: KEYCLOAK_REALM
+            value: 'operate-first-apicurio'
+          - name: KEYCLOAK_API_CLIENT_ID
+            value: 'sr-api'
+          - name: TENANT_MANAGER_AUTH_URL
+            value: 'https://auth.apicur.io/auth'
+          - name: TENANT_MANAGER_REALM
+            value: 'operate-first-apicurio'
+          - name: TENANT_MANAGER_CLIENT_ID
+            value: 'sr-tenant-manager'
+          - name: ORGANIZATION_ID_CLAIM
+            value: 'organization_id'
+          - name: TENANT_MANAGER_AUTH_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: tenant-manager-client-secret
+                key: secret
+                optional: false
+        ports:
+        - name: http
+          containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: registry-app
+spec:
+  selector:
+    app: registry-app
+  type: LoadBalancer
+  ports:
+  - port: 8080
+    targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: registry-app
+  annotations: 
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  rules:
+  # TODO: test and fix this properly
+  # POSSIBLY: localhost on Mac $(minikube ip) on Linux
+  # TODO a script to configure everything
+  - host: registry-app.192.168.49.2.nip.io
+    http:
+      paths:
+      - path: /app
+        pathType: Prefix
+        backend:
+          service:
+            name: registry-app
+            port:
+              number: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: apicurio-registry-mt-ui
+  name: apicurio-registry-mt-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apicurio-registry-mt-ui
+  template:
+    metadata:
+      labels:
+        app: apicurio-registry-mt-ui
+    spec:
+      containers:
+        - name: apicurio-registry-mt-ui
+          image: quay.io/apicurio/apicurio-registry-mt-ui:hackathon
+          env:
+            - name: REGISTRY_UI_URL
+              # TODO: configure
+              value: http://localhost/app/modules/registry/apicurio_registry.js
+            - name: SRS_API_URL
+              value: https://fleet-manager:8081
+            - name: AUTH_ENABLED
+              value: 'true'
+            # TODO: use a self contained Keycloak
+            - name: KEYCLOAK_URL
+              value: https://auth.apicur.io/auth
+            - name: KEYCLOAK_REALM
+              value: operate-first-apicurio
+            - name: KEYCLOAK_SSL_REQUIRED
+              value: external
+            - name: KEYCLOAK_RESOURCE
+              value: sr-ui
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apicurio-registry-mt-ui
+spec:
+  selector:
+    app: apicurio-registry-mt-ui
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: apicurio-registry-mt-ui
+  # TODO: check if needed
+  annotations: 
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  rules:
+  # TODO: test and fix this properly
+  # POSSIBLY: localhost on Mac $(minikube ip) on Linux
+  # TODO a script to configure everything
+  - host: registry.192.168.49.2.nip.io
+    http:
+      paths:
+      - path: /ui
+        pathType: Prefix
+        backend:
+          service:
+            name: apicurio-registry-mt-ui
+            port:
+              number: 80
