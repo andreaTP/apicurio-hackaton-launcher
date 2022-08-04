@@ -13,12 +13,7 @@ fi
 export AUTH_ENABLED=true
 export KEYCLOAK_URL='https://auth.apicur.io/auth'
 export KEYCLOAK_REALM='operate-first-apicurio'
-export TENANT_MANAGER_AUTH_ENABLED='true'
-export TENANT_MANAGER_AUTH_SERVER_URL='https://auth.apicur.io/auth'
-export TENANT_MANAGER_AUTH_SERVER_REALM='operate-first-apicurio'
-export TENANT_MANAGER_AUTH_CLIENT_ID='sr-tenant-manager'
-export TENANT_MANAGER_AUTH_SECRET="${TENANT_MANAGER_CLIENT_SECRET}"
-export ORGANIZATION_ID_CLAIM="organization_id"
+export REGISTRY_ROUTE_URL='http://localhost:8080'
 
 export KEYCLOAK_API_CLIENT_ID='sr-tenant-manager'
 

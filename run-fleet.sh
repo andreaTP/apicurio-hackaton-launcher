@@ -11,7 +11,6 @@ if [[ -z "${TENANT_MANAGER_CLIENT_SECRET}" ]]; then
 fi
 
 export USE_LOCAL_AMS=true
-
 export AUTH_ENABLED=true
 export KEYCLOAK_URL='https://auth.apicur.io/auth'
 export KEYCLOAK_REALM='operate-first-apicurio'
