@@ -1,4 +1,3 @@
-# Fleet manager
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,15 +15,12 @@ spec:
         app: fleet-manager
     spec:
       volumes:
-      - name: fleet-manager-config
-        secret:
-          secretName: fleet-manager-config
+      - name: fleet-manager-config-vol
+        configMap:
+          name: fleet-manager-config
       - name: local-nginx-proxy-vol
         configMap:
           name: local-nginx-proxy
-          items:
-          - key: nginx.conf
-            path: nginx.conf
       containers:
       - name: fleet-manager
         image: 'quay.io/apicurio/apicurio-registry-fleet-manager:latest-snapshot'
@@ -45,10 +41,8 @@ spec:
             value: '/mnt/config/registry-deployments.yaml'
           - name: AUTH_ENABLED
             value: 'true'
-          # TODO configure this properly
           - name: REGISTRY_BROWSER_URL
             value: http://localhost:8081
-          # TODO: use a self contained Keycloak
           - name: KEYCLOAK_URL
             value: 'http://localhost:8083'
           - name: KEYCLOAK_REALM
@@ -75,7 +69,7 @@ spec:
         - name: http
           containerPort: 8080
         volumeMounts:
-        - name: fleet-manager-config
+        - name: fleet-manager-config-vol
           readOnly: true
           mountPath: "/mnt/config"
       - name: kc-reverse-proxy
@@ -87,14 +81,6 @@ spec:
           mountPath: /etc/nginx/nginx.conf
           subPath: nginx.conf
           readOnly: true
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: fleet-manager-config
-data:
-  quota-plans.yaml: cmVjb25jaWxlOiBmYWxzZQpwbGFuczoKICAtIG5hbWU6IGRlZmF1bHQKICAgIHJlc291cmNlczoKICAgICAgLSB0eXBlOiBNQVhfVE9UQUxfU0NIRU1BU19DT1VOVAogICAgICAgIGxpbWl0OiAxMDAwMAogICAgICAtIHR5cGU6IE1BWF9TQ0hFTUFfU0laRV9CWVRFUwogICAgICAgIGxpbWl0OiAxMDQ4NTc2ICMgMSBNYgogICAgICAtIHR5cGU6IE1BWF9BUlRJRkFDVFNfQ09VTlQKICAgICAgICBsaW1pdDogLTEKICAgICAgLSB0eXBlOiBNQVhfVkVSU0lPTlNfUEVSX0FSVElGQUNUX0NPVU5UCiAgICAgICAgbGltaXQ6IC0xCiAgICAgIC0gdHlwZTogTUFYX0FSVElGQUNUX1BST1BFUlRJRVNfQ09VTlQKICAgICAgICBsaW1pdDogNTAKICAgICAgLSB0eXBlOiBNQVhfUFJPUEVSVFlfS0VZX1NJWkVfQllURVMKICAgICAgICBsaW1pdDogMjU2CiAgICAgIC0gdHlwZTogTUFYX1BST1BFUlRZX1ZBTFVFX1NJWkVfQllURVMKICAgICAgICBsaW1pdDogMTAyNAogICAgICAtIHR5cGU6IE1BWF9BUlRJRkFDVF9MQUJFTFNfQ09VTlQKICAgICAgICBsaW1pdDogNTAKICAgICAgLSB0eXBlOiBNQVhfTEFCRUxfU0laRV9CWVRFUwogICAgICAgIGxpbWl0OiAyNTYKICAgICAgLSB0eXBlOiBNQVhfQVJUSUZBQ1RfTkFNRV9MRU5HVEhfQ0hBUlMKICAgICAgICBsaW1pdDogLTEKICAgICAgLSB0eXBlOiBNQVhfQVJUSUZBQ1RfREVTQ1JJUFRJT05fTEVOR1RIX0NIQVJTCiAgICAgICAgbGltaXQ6IC0xCiAgICAgIC0gdHlwZTogTUFYX1JFUVVFU1RTX1BFUl9TRUNPTkRfQ09VTlQKICAgICAgICBsaW1pdDogMTAKICAtIG5hbWU6IGFscGhhCiAgICByZXNvdXJjZXM6CiAgICAgIC0gdHlwZTogTUFYX1RPVEFMX1NDSEVNQVNfQ09VTlQKICAgICAgICBsaW1pdDogMTAwMDAwCiAgICAgIC0gdHlwZTogTUFYX1NDSEVNQV9TSVpFX0JZVEVTCiAgICAgICAgbGltaXQ6IDEwNDg1NzYgIyAxIE1iCiAgICAgIC0gdHlwZTogTUFYX0FSVElGQUNUU19DT1VOVAogICAgICAgIGxpbWl0OiAtMQogICAgICAtIHR5cGU6IE1BWF9WRVJTSU9OU19QRVJfQVJUSUZBQ1RfQ09VTlQKICAgICAgICBsaW1pdDogLTEKICAgICAgLSB0eXBlOiBNQVhfQVJUSUZBQ1RfUFJPUEVSVElFU19DT1VOVAogICAgICAgIGxpbWl0OiA1MAogICAgICAtIHR5cGU6IE1BWF9QUk9QRVJUWV9LRVlfU0laRV9CWVRFUwogICAgICAgIGxpbWl0OiAyNTYKICAgICAgLSB0eXBlOiBNQVhfUFJPUEVSVFlfVkFMVUVfU0laRV9CWVRFUwogICAgICAgIGxpbWl0OiAxMDI0CiAgICAgIC0gdHlwZTogTUFYX0FSVElGQUNUX0xBQkVMU19DT1VOVAogICAgICAgIGxpbWl0OiA1MAogICAgICAtIHR5cGU6IE1BWF9MQUJFTF9TSVpFX0JZVEVTCiAgICAgICAgbGltaXQ6IDI1NgogICAgICAtIHR5cGU6IE1BWF9BUlRJRkFDVF9OQU1FX0xFTkdUSF9DSEFSUwogICAgICAgIGxpbWl0OiAtMQogICAgICAtIHR5cGU6IE1BWF9BUlRJRkFDVF9ERVNDUklQVElPTl9MRU5HVEhfQ0hBUlMKICAgICAgICBsaW1pdDogLTEKICAgICAgLSB0eXBlOiBNQVhfUkVRVUVTVFNfUEVSX1NFQ09ORF9DT1VOVAogICAgICAgIGxpbWl0OiAxMDA=
-  registry-deployments.yaml: ZGVwbG95bWVudHM6CiAgLSBuYW1lOiBkZXBsb3ltZW50LTEKICAgIHJlZ2lzdHJ5RGVwbG95bWVudFVybDogaHR0cDovL2xvY2FsaG9zdDo4MDgyCiAgICB0ZW5hbnRNYW5hZ2VyVXJsOiBodHRwOi8vdGVuYW50LW1hbmFnZXI6ODU4NQo=
 ---
 apiVersion: v1
 kind: Service
@@ -147,3 +133,69 @@ spec:
   ports:
   - port: 5432
     targetPort: 5432
+---
+apiVersion: v1  
+kind: ConfigMap  
+metadata:  
+  name: fleet-manager-config
+data:  
+  quota-plans.yaml: |
+    reconcile: false
+    plans:
+      - name: default
+        resources:
+          - type: MAX_TOTAL_SCHEMAS_COUNT
+            limit: 10000
+          - type: MAX_SCHEMA_SIZE_BYTES
+            limit: 1048576 # 1 Mb
+          - type: MAX_ARTIFACTS_COUNT
+            limit: -1
+          - type: MAX_VERSIONS_PER_ARTIFACT_COUNT
+            limit: -1
+          - type: MAX_ARTIFACT_PROPERTIES_COUNT
+            limit: 50
+          - type: MAX_PROPERTY_KEY_SIZE_BYTES
+            limit: 256
+          - type: MAX_PROPERTY_VALUE_SIZE_BYTES
+            limit: 1024
+          - type: MAX_ARTIFACT_LABELS_COUNT
+            limit: 50
+          - type: MAX_LABEL_SIZE_BYTES
+            limit: 256
+          - type: MAX_ARTIFACT_NAME_LENGTH_CHARS
+            limit: -1
+          - type: MAX_ARTIFACT_DESCRIPTION_LENGTH_CHARS
+            limit: -1
+          - type: MAX_REQUESTS_PER_SECOND_COUNT
+            limit: 10
+      - name: alpha
+        resources:
+          - type: MAX_TOTAL_SCHEMAS_COUNT
+            limit: 100000
+          - type: MAX_SCHEMA_SIZE_BYTES
+            limit: 1048576 # 1 Mb
+          - type: MAX_ARTIFACTS_COUNT
+            limit: -1
+          - type: MAX_VERSIONS_PER_ARTIFACT_COUNT
+            limit: -1
+          - type: MAX_ARTIFACT_PROPERTIES_COUNT
+            limit: 50
+          - type: MAX_PROPERTY_KEY_SIZE_BYTES
+            limit: 256
+          - type: MAX_PROPERTY_VALUE_SIZE_BYTES
+            limit: 1024
+          - type: MAX_ARTIFACT_LABELS_COUNT
+            limit: 50
+          - type: MAX_LABEL_SIZE_BYTES
+            limit: 256
+          - type: MAX_ARTIFACT_NAME_LENGTH_CHARS
+            limit: -1
+          - type: MAX_ARTIFACT_DESCRIPTION_LENGTH_CHARS
+            limit: -1
+          - type: MAX_REQUESTS_PER_SECOND_COUNT
+            limit: 100
+  registry-deployments.yaml: |
+      deployments:
+        - name: deployment-1
+          registryDeploymentUrl: http://localhost:8082
+          tenantManagerUrl: http://tenant-manager:8585

@@ -31,10 +31,8 @@ spec:
     spec:
       containers:
       - name: keycloak
-        image: docker.io/andreatp/apicurio-kc-test:latest
-        # image: quay.io/keycloak/keycloak:18.0.1
-        # Also need to import realm
-        args: ["start-dev"]
+        image: quay.io/keycloak/keycloak:18.0.1
+        args: ["start-dev", "--import-realm"]
         env:
         - name: KEYCLOAK_ADMIN
           value: "admin"
@@ -49,23 +47,11 @@ spec:
         ports:
         - name: http
           containerPort: 8080
-# ---
-# apiVersion: networking.k8s.io/v1
-# kind: Ingress
-# metadata:
-#   name: keycloak
-# spec:
-#   tls:
-#     - hosts:
-#       - KEYCLOAK_HOST
-#   rules:
-#   - host: KEYCLOAK_HOST
-#     http:
-#       paths:
-#       - path: /
-#         pathType: Prefix
-#         backend:
-#           service:
-#             name: keycloak
-#             port:
-#               number: 8080
+        volumeMounts:
+        - name: keycloak-realm-vol
+          mountPath: /opt/keycloak/data/import/realm.json
+          subPath: realm.json
+      volumes:
+        - name: keycloak-realm-vol
+          configMap:
+            name: keycloak-realm

@@ -1,32 +1,33 @@
-# Tenant manager
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tenant-manager
+  name: registry-app
   labels:
-    app: tenant-manager
+    app: registry-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: tenant-manager
+      app: registry-app
   template:
     metadata:
       labels:
-        app: tenant-manager
+        app: registry-app
     spec:
       containers:
-      - name: tenant-manager
-        image: quay.io/apicurio/apicurio-registry-tenant-manager-api:latest-snapshot
+      - name: registry-app
+        image: 'quay.io/apicurio/apicurio-registry-sql:latest-snapshot'
         env:
-          - name: DATASOURCE_URL
-            value: 'jdbc:postgresql://multitenant-sr-db-tenant:5432/multitenantsrdb'
-          - name: DATASOURCE_USERNAME
+          - name: REGISTRY_ENABLE_MULTITENANCY
+            value: 'true'
+          - name: REGISTRY_DATASOURCE_URL
+            value: 'jdbc:postgresql://multitenant-sr-db-registry:5432/multitenantsrdb'
+          - name: REGISTRY_DATASOURCE_USERNAME
             value: 'postgres'
-          - name: DATASOURCE_PASSWORD
+          - name: REGISTRY_DATASOURCE_PASSWORD
             value: 'postgres'
-          - name: REGISTRY_ROUTE_URL
-            value: 'http://localhost:9090'
+          - name: TENANT_MANAGER_URL
+            value: 'http://tenant-manager:8585'
           - name: AUTH_ENABLED
             value: 'true'
           - name: KEYCLOAK_URL
@@ -34,10 +35,24 @@ spec:
           - name: KEYCLOAK_REALM
             value: 'demo-apicurio'
           - name: KEYCLOAK_API_CLIENT_ID
+            value: 'sr-api'
+          - name: ORGANIZATION_ID_CLAIM
+            value: 'organization_id'
+          - name: TENANT_MANAGER_AUTH_URL
+            value: 'http://localhost:8083'
+          - name: TENANT_MANAGER_REALM
+            value: 'demo-apicurio'
+          - name: TENANT_MANAGER_CLIENT_ID
             value: 'sr-tenant-manager'
+          - name: TENANT_MANAGER_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: tenant-manager-client-secret
+                key: secret
+                optional: false
         ports:
         - name: http
-          containerPort: 8585
+          containerPort: 8080
       - name: kc-reverse-proxy
         image: nginx
         ports:
@@ -51,36 +66,33 @@ spec:
       - name: local-nginx-proxy-vol
         configMap:
           name: local-nginx-proxy
-          items:
-          - key: nginx.conf
-            path: nginx.conf
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: tenant-manager
+  name: registry-app
 spec:
   selector:
-    app: tenant-manager
+    app: registry-app
   type: LoadBalancer
   ports:
-  - port: 8585
-    targetPort: 8585
+  - port: 8080
+    targetPort: 8080
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: multitenant-sr-db-tenant
+  name: multitenant-sr-db-registry
 spec:
-  serviceName: multitenant-sr-db-service-tenant
+  serviceName: multitenant-sr-db-service-registry
   selector:
     matchLabels:
-      app: multitenant-sr-db-tenant
+      app: multitenant-sr-db-registry
   replicas: 1
   template:
     metadata:
       labels:
-        app: multitenant-sr-db-tenant
+        app: multitenant-sr-db-registry
     spec:
       containers:
         - name: postgresql-db
@@ -98,10 +110,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: multitenant-sr-db-tenant
+  name: multitenant-sr-db-registry
 spec:
   selector:
-    app: multitenant-sr-db-tenant
+    app: multitenant-sr-db-registry
   type: LoadBalancer
   ports:
   - port: 5432
