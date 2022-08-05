@@ -33,7 +33,7 @@ spec:
           - name: KEYCLOAK_URL
             value: 'http://localhost:8083'
           - name: KEYCLOAK_REALM
-            value: 'operate-first-apicurio'
+            value: 'demo-apicurio'
           - name: KEYCLOAK_API_CLIENT_ID
             value: 'sr-api'
           - name: ORGANIZATION_ID_CLAIM
@@ -41,7 +41,7 @@ spec:
           - name: TENANT_MANAGER_AUTH_URL
             value: 'http://localhost:8083'
           - name: TENANT_MANAGER_REALM
-            value: 'operate-first-apicurio'
+            value: 'demo-apicurio'
           - name: TENANT_MANAGER_CLIENT_ID
             value: 'sr-tenant-manager'
           - name: TENANT_MANAGER_CLIENT_SECRET

@@ -5,8 +5,8 @@ metadata:
 data:  
   realm.json: |
     {
-      "id": "operate-first-apicurio",
-      "realm": "operate-first-apicurio",
+      "id": "demo-apicurio",
+      "realm": "demo-apicurio",
       "notBefore": 0,
       "defaultSignatureAlgorithm": "RS256",
       "revokeRefreshToken": false,
@@ -57,12 +57,12 @@ data:
             "description": "${role_uma_authorization}",
             "composite": false,
             "clientRole": false,
-            "containerId": "operate-first-apicurio",
+            "containerId": "demo-apicurio",
             "attributes": {}
           },
           {
             "id": "9ae6a3a4-d91f-40ae-840f-09830a853df4",
-            "name": "default-roles-operate-first-apicurio",
+            "name": "default-roles-demo-apicurio",
             "description": "${role_default-roles}",
             "composite": true,
             "composites": {
@@ -78,7 +78,7 @@ data:
               }
             },
             "clientRole": false,
-            "containerId": "operate-first-apicurio",
+            "containerId": "demo-apicurio",
             "attributes": {}
           },
           {
@@ -87,7 +87,7 @@ data:
             "description": "${role_offline-access}",
             "composite": false,
             "clientRole": false,
-            "containerId": "operate-first-apicurio",
+            "containerId": "demo-apicurio",
             "attributes": {}
           }
         ],
@@ -406,11 +406,11 @@ data:
       "groups": [],
       "defaultRole": {
         "id": "9ae6a3a4-d91f-40ae-840f-09830a853df4",
-        "name": "default-roles-operate-first-apicurio",
+        "name": "default-roles-demo-apicurio",
         "description": "${role_default-roles}",
         "composite": true,
         "clientRole": false,
-        "containerId": "operate-first-apicurio"
+        "containerId": "demo-apicurio"
       },
       "requiredCredentials": [
         "password"
@@ -461,7 +461,7 @@ data:
           "disableableCredentialTypes": [],
           "requiredActions": [],
           "realmRoles": [
-            "default-roles-operate-first-apicurio"
+            "default-roles-demo-apicurio"
           ],
           "notBefore": 0,
           "groups": []
@@ -477,7 +477,7 @@ data:
           "disableableCredentialTypes": [],
           "requiredActions": [],
           "realmRoles": [
-            "default-roles-operate-first-apicurio"
+            "default-roles-demo-apicurio"
           ],
           "notBefore": 0,
           "groups": []
@@ -493,7 +493,7 @@ data:
           "disableableCredentialTypes": [],
           "requiredActions": [],
           "realmRoles": [
-            "default-roles-operate-first-apicurio"
+            "default-roles-demo-apicurio"
           ],
           "notBefore": 0,
           "groups": []
@@ -509,7 +509,7 @@ data:
         {
           "clientScope": "organization-id",
           "roles": [
-            "default-roles-operate-first-apicurio"
+            "default-roles-demo-apicurio"
           ]
         }
       ],
@@ -529,13 +529,13 @@ data:
           "clientId": "account",
           "name": "${client_account}",
           "rootUrl": "${authBaseUrl}",
-          "baseUrl": "/realms/operate-first-apicurio/account/",
+          "baseUrl": "/realms/demo-apicurio/account/",
           "surrogateAuthRequired": false,
           "enabled": true,
           "alwaysDisplayInConsole": false,
           "clientAuthenticatorType": "client-secret",
           "redirectUris": [
-            "/realms/operate-first-apicurio/account/*"
+            "/realms/demo-apicurio/account/*"
           ],
           "webOrigins": [],
           "notBefore": 0,
@@ -570,13 +570,13 @@ data:
           "clientId": "account-console",
           "name": "${client_account-console}",
           "rootUrl": "${authBaseUrl}",
-          "baseUrl": "/realms/operate-first-apicurio/account/",
+          "baseUrl": "/realms/demo-apicurio/account/",
           "surrogateAuthRequired": false,
           "enabled": true,
           "alwaysDisplayInConsole": false,
           "clientAuthenticatorType": "client-secret",
           "redirectUris": [
-            "/realms/operate-first-apicurio/account/*"
+            "/realms/demo-apicurio/account/*"
           ],
           "webOrigins": [],
           "notBefore": 0,
@@ -734,13 +734,13 @@ data:
           "clientId": "security-admin-console",
           "name": "${client_security-admin-console}",
           "rootUrl": "${authAdminUrl}",
-          "baseUrl": "/admin/operate-first-apicurio/console/",
+          "baseUrl": "/admin/demo-apicurio/console/",
           "surrogateAuthRequired": false,
           "enabled": true,
           "alwaysDisplayInConsole": false,
           "clientAuthenticatorType": "client-secret",
           "redirectUris": [
-            "/admin/operate-first-apicurio/console/*"
+            "/admin/demo-apicurio/console/*"
           ],
           "webOrigins": [
             "+"

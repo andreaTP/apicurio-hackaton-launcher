@@ -32,7 +32,7 @@ spec:
           - name: KEYCLOAK_URL
             value: 'http://localhost:8083'
           - name: KEYCLOAK_REALM
-            value: 'operate-first-apicurio'
+            value: 'demo-apicurio'
           - name: KEYCLOAK_API_CLIENT_ID
             value: 'sr-tenant-manager'
         ports:
