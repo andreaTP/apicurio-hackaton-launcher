@@ -1,3 +1,5 @@
+# TODO Use env vars for this
+
 deployments:
   - name: deployment-1
     registryDeploymentUrl: http://localhost:8082
