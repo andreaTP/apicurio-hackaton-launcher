@@ -39,6 +39,47 @@ spec:
   - port: 5432
     targetPort: 5432
 ---
+# Postgres for fleet manager
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: multitenant-sr-db-fleet
+spec:
+  serviceName: multitenant-sr-db-service-fleet
+  selector:
+    matchLabels:
+      app: multitenant-sr-db-fleet
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: multitenant-sr-db-fleet
+    spec:
+      containers:
+        - name: postgresql-db
+          image: postgres:latest
+          env:
+            - name: POSTGRES_DB
+              value: multitenantsrdb
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+            - name: PGDATA
+              value: /data/pgdata
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: multitenant-sr-db-fleet
+spec:
+  selector:
+    app: multitenant-sr-db-fleet
+  type: LoadBalancer
+  ports:
+  - port: 5432
+    targetPort: 5432
+---
 # Tenant manager
 apiVersion: apps/v1
 kind: Deployment
@@ -81,6 +122,22 @@ spec:
         ports:
         - name: http
           containerPort: 8585
+      - name: kc-reverse-proxy
+        image: nginx
+        ports:
+        - containerPort: 8083
+        volumeMounts:
+        - name: local-nginx-proxy-vol
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+          readOnly: true
+      volumes:
+      - name: local-nginx-proxy-vol
+        configMap:
+          name: local-nginx-proxy
+          items:
+          - key: nginx.conf
+            path: nginx.conf
 ---
 apiVersion: v1
 kind: Service
@@ -128,7 +185,7 @@ spec:
           - name: USE_LOCAL_AMS
             value: 'true'
           - name: SERVICE_API_DATASOURCE_URL
-            value: 'jdbc:postgresql://multitenant-sr-db:5432/multitenantsrdb'
+            value: 'jdbc:postgresql://multitenant-sr-db-fleet:5432/multitenantsrdb'
           - name: SERVICE_API_DATASOURCE_USERNAME
             value: 'postgres'
           - name: SERVICE_API_DATASOURCE_PASSWORD
