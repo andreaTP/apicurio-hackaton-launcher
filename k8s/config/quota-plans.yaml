@@ -1,4 +1,4 @@
-reconcile: false # Enable this if you make changes to the plans configuration
+reconcile: false
 plans:
   - name: default
     resources:

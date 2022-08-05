@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  labels:
+    app: keycloak
+spec:
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: keycloak
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:18.0.1
+        # Also need to import realm
+        args: ["start-dev", "--import-realm"]
+        env:
+        - name: KEYCLOAK_ADMIN
+          value: "admin"
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          value: "admin"
+        - name: KC_PROXY
+          value: "edge"
+        - name: KC_HOSTNAME
+          value: "localhost"
+        - name: KC_HOSTNAME_PORT
+          value: "8083"
+        ports:
+        - name: http
+          containerPort: 8080
+        volumeMounts:
+        - name: keycloak-realm-vol
+          mountPath: /opt/keycloak/data/import/realm.json
+          subPath: realm.json
+      volumes:
+        - name: keycloak-realm-vol
+          configMap:
+            name: keycloak-realm
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: keycloak
+# spec:
+#   tls:
+#     - hosts:
+#       - KEYCLOAK_HOST
+#   rules:
+#   - host: KEYCLOAK_HOST
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: keycloak
+#             port:
+#               number: 8080
