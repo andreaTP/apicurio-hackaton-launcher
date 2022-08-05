@@ -5,7 +5,7 @@ plans:
       - type: MAX_TOTAL_SCHEMAS_COUNT
         limit: 10000
       - type: MAX_SCHEMA_SIZE_BYTES
-        limit: 65536 # 64 KiB
+        limit: 1048576 # 1 Mb
       - type: MAX_ARTIFACTS_COUNT
         limit: -1
       - type: MAX_VERSIONS_PER_ARTIFACT_COUNT
@@ -31,7 +31,7 @@ plans:
       - type: MAX_TOTAL_SCHEMAS_COUNT
         limit: 100000
       - type: MAX_SCHEMA_SIZE_BYTES
-        limit: 524288 # 512 KiB
+        limit: 1048576 # 1 Mb
       - type: MAX_ARTIFACTS_COUNT
         limit: -1
       - type: MAX_VERSIONS_PER_ARTIFACT_COUNT
